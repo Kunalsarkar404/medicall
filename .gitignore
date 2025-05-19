@@ -1,0 +1,16 @@
+# Root node_modules if any
+node_modules/
+.env
+.DS_Store
+
+# Client-specific
+client/.next/
+client/node_modules/
+client/.env.local
+
+# Server-specific
+server/node_modules/
+server/.env
+
+# Logs
+*.log
