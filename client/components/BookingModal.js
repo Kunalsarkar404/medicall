@@ -53,7 +53,7 @@ export default function BookingModal({ isOpen, onClose, doctor, user }) {
                 notes: `Patient: ${form.patientName}, Relation: ${form.relation}, Age: ${form.age}`,
             })
             onClose()
-            router().refresh()
+            router.refresh()
         } catch (error) {
             setError(error.response?.data?.error || 'Failed to book appointment')
         } finally {

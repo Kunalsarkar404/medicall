@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const routes = require('./routes');
+const { schedulerRemiders } = require('./utils/scheduler');
 
 require('./models/User')
 require('./models/Doctor')
@@ -18,6 +19,8 @@ app.use(express.json());
 connectDB();
 
 app.use('/api', routes);
+
+schedulerRemiders()
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));

@@ -1,15 +1,30 @@
 "use client"
+import BookingModal from "@/components/BookingModal";
 import DoctorCard from "@/components/DoctorCard";
 import { Button } from "@/components/ui/button";
 import { getDoctors } from "@/lib/api";
+import { jwtDecode } from "jwt-decode";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
 export default function Home() {
   const [doctors, setDoctors] = useState([])
   const [loading, setLoading] = useState(true)
+  const [selectedDoctor, setSelectedDoctor] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [user, setUser] = useState(null)
 
   useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      try {
+        const decoded = jwtDecode(token)
+        setUser({ id: decoded.id, name: decoded.name || 'User' })
+      } catch (error) {
+        console.error('Invalid token:', err)
+      }
+    }
+
     const fetchDoctors = async () => {
       try {
         const { data } = await getDoctors()
@@ -22,6 +37,12 @@ export default function Home() {
     }
     fetchDoctors()
   }, [])
+
+  const handleBookNow = (doctor) => {
+    setSelectedDoctor(doctor)
+    setIsModalOpen(true)
+  }
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-gradient-to-b from-background to-green-300">
       <section className="py-16 text-center md:text-left md:flex md:items-center md:justify-between gap-10">
@@ -35,8 +56,8 @@ export default function Home() {
         <Image
           src="/doctor.png"
           alt="Medicall"
-          width={400}
-          height={400}
+          width={200}
+          height={200}
           className="mx-auto mt-10 md:mt-0"
         />
       </section>
@@ -54,12 +75,19 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {doctors.map((doctor, index) => (
-              <DoctorCard key={index} doctor={doctor} />
+              <DoctorCard key={index} doctor={doctor} onBookNow={handleBookNow} />
             ))}
           </div>
         )}
       </section>
-
+      {selectedDoctor && (
+        <BookingModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          doctor={selectedDoctor}
+          user={user}
+        />
+      )}
     </main>
   );
 }
