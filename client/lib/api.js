@@ -22,5 +22,11 @@ export const verifyOTP = (data) => api.post('/users/verify-otp', data)
 export const getDoctors = () => api.get('/doctors')
 export const createAppointment = (data) => api.post('/appointments', data)
 export const getAvailableSlots = (doctorId, date) => api.get(`/doctors/slots?doctorId=${doctorId}&date=${date}`)
+export const loginDoctor = (data) => api.post('/doctors/login', data)
+export const getDoctorAppointments = (doctorId) => api.get(`/appointments/doctor/${doctorId}`)
+export const cancelAppointment = (appointmentId) => api.put(`/appointments/${appointmentId}/cancel`)
+export const getUserAppointments = (userId, params) => api.get(`/appointments/user/${userId}`, { params })
+export const updateUserProfile = (userId, data) => api.put(`/users/${userId}`, data)
+export const rescheduleAppointment = (appointmentId, data) => api.put(`/appointments/${appointmentId}/reschedule`, data)
 
 export default api

@@ -1,4 +1,5 @@
 const twilio = require('twilio')
+require('dotenv').config();
 
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
 
@@ -11,7 +12,7 @@ const sendSMS = async ({ to, body }) => {
         })
         console.log(`SMS sent to ${to}`)
     } catch (error) {
-        console.errorg('Error sending SMS:', error)
+        console.error('Error sending SMS:', error)
         throw new Error('Failed to send SMS')
     }
 }

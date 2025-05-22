@@ -49,7 +49,7 @@ doctorScheme.pre('save', async function (next) {
 })
 
 doctorScheme.methods.comparePassword = async function (password) {
-    return await bcrypt.password(password, this.password);
+    return await bcrypt.compare(password, this.password);
 }
 
 module.exports = mongoose.model('Doctor', doctorScheme)

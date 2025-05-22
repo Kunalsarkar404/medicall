@@ -1,8 +1,3 @@
-Here’s your updated and clean `README.md` for the **Medicall** project, reflecting your current tech choices and structure — without any mention of VaidyaPlus, and with your real authentication flow (OTP via Twilio for users, JWT for doctors):
-
----
-
-```md
 # 🩺 Medicall — Your Mobile Healthcare Companion
 
 **Medicall** is a full-stack doctor appointment booking platform built with a modern tech stack using **Next.js 15** for the frontend and **Express.js** for the backend. It offers a mobile-first experience focused on real-time booking, easy access to doctors, and a minimal yet powerful MVP.
@@ -39,9 +34,7 @@ Here’s your updated and clean `README.md` for the **Medicall** project, reflec
 ---
 
 ## 🧱 Project Structure
-
 ```
-
 /medicall
 │
 ├── /client       # Frontend (Next.js)
@@ -62,7 +55,6 @@ Here’s your updated and clean `README.md` for the **Medicall** project, reflec
 └── package.json
 
 ````
-
 ---
 
 ## ⚙️ Getting Started
@@ -117,12 +109,16 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:5000/api
 ### Example for `server/.env`
 
 ```env
-PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
-TWILIO_ACCOUNT_SID=your_twilio_sid
-TWILIO_AUTH_TOKEN=your_twilio_token
+PORT=8000
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/vaishyaplus?retryWrites=true&w=majority
+JWT_SECRET=your_jwt_secret_key_12345
+TWILIO_ACCOUNT_SID=your_twilio_account_sid
+TWILIO_AUTH_TOKEN=your_twilio_auth_token
 TWILIO_PHONE_NUMBER=+1234567890
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_app_specific_password
 ```
 
 ---
@@ -155,9 +151,6 @@ This project is licensed under the [MIT License](LICENSE).
 > 🩺 **Medicall** — *Jab zarurat ho, hum saath hain.*
 
 ```
-
----
-
 Let me know if you'd like to:
 
 - Add deployment sections for **Vercel** + **Render**

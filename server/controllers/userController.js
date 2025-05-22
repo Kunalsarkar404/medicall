@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler')
 const User = require('../models/User')
 const OTP = require('../models/OTP')
+const { sendSMS } = require('../utils/sms')
 const jwt = require('jsonwebtoken')
 require('dotenv').config();
 const twilio = require('twilio')
@@ -8,17 +9,17 @@ const twilio = require('twilio')
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
 
 // Generate JWT
-const generateToken = (id, role) => {
-    return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '30d' })
+const generateToken = (id, name, email, mobile) => {
+    return jwt.sign({ id, name, email, mobile, iss: 'user' }, process.env.JWT_SECRET, { expiresIn: '30d' })
 }
 
-// Register a new user (patient)
+// Register user
 const registerUser = asyncHandler(async (req, res) => {
-    const { mobile, name, email } = req.body
+    const { name, mobile, email, password } = req.body
 
-    if (!mobile || !name) {
+    if (!name || !mobile || !password) {
         res.status(400)
-        throw new Error('Mobile and name are required')
+        throw new Error('Name, mobile, and password are required')
     }
 
     const existingUser = await User.findOne({ mobile })
@@ -27,10 +28,12 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new Error('Mobile number already registered')
     }
 
-    const user = new User({ mobile, name, email })
+    const user = new User({ name, mobile, email, password })
     await user.save()
 
-    res.status(201).json({ message: 'User registered successfully', user: { id: user._id, mobile, name, email } })
+    const token = generateToken(user._id, user.name, user.email, user.mobile)
+
+    res.status(201).json({ message: 'User registered successfully', token })
 })
 
 // Send OTP
@@ -48,9 +51,7 @@ const sendOTP = asyncHandler(async (req, res) => {
         throw new Error('User not found')
     }
 
-    // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
-
     // Save OTP to database
     await OTP.create({ mobile, otp })
 
@@ -97,16 +98,41 @@ const verifyOTP = asyncHandler(async (req, res) => {
         user: { id: user._id, mobile, name: user.name, email: user.email },
     })
 })
-
-// Get user profile (protected)
-const getUserProfile = asyncHandler(async (req, res) => {
+// Update user profile
+const updateUserProfile = asyncHandler(async (req, res) => {
     const { userId } = req.params
-    const user = await User.findById(userId).select('-__v')
+    const { name, email, mobile } = req.body
+
+    if (!name || !mobile) {
+        res.status(400)
+        throw new Error('Name and mobile are required')
+    }
+
+    const user = await User.findById(userId)
     if (!user) {
         res.status(404)
         throw new Error('User not found')
     }
-    res.json(user)
+
+    // Check if mobile is taken by another user
+    const existingUser = await User.findOne({ mobile, _id: { $ne: userId } })
+    if (existingUser) {
+        res.status(400)
+        throw new Error('Mobile number already registered')
+    }
+
+    user.name = name
+    user.email = email || ''
+    user.mobile = mobile
+    await user.save()
+
+    const token = generateToken(user._id, user.name, user.email, user.mobile)
+
+    res.json({
+        message: 'Profile updated successfully',
+        token,
+        user: { id: user._id, name: user.name, email: user.email, mobile: user.mobile },
+    })
 })
 
-module.exports = { registerUser, sendOTP, verifyOTP, getUserProfile }
+module.exports = { registerUser, sendOTP, verifyOTP, updateUserProfile }
