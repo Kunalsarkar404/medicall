@@ -47,15 +47,21 @@ export default function Login() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-green-100 to-green-500">
+        <div className="min-h-screen flex flex-col items-center justify-center">
+            <div className="my-5">
+                <h1 className="text-4xl font-bold text-green-700">Welcome to Rakshaya</h1>
+                <p className="mt-2 text-lg text-center text-gray-600">
+                    Jab zarurat ho, hum saath hain.
+                </p>
+            </div>
             <Card className="w-full max-w-md">
                 <CardHeader>
-                    <CardTitle className="text-2xl text-primary">Login</CardTitle>
+                    <CardTitle className="text-2xl text-primary text-center">Login</CardTitle>
                 </CardHeader>
                 <CardContent>
                     {step === 'send' ? (
                         <form onSubmit={handleSendOTP} className="space-y-4">
-                            <div>
+                            <div className="space-y-3">
                                 <Label htmlFor="mobile">Mobile Number</Label>
                                 <Input
                                     id="mobile"
@@ -67,7 +73,7 @@ export default function Login() {
                                 />
                             </div>
                             {error && <p className="text-red-500">{error}</p>}
-                            <Button type="submit" className="w-full" disabled={loading}>
+                            <Button type="submit" className="w-full bg-green-700" disabled={loading}>
                                 {loading ? 'Sending OTP...' : 'Send OTP'}
                             </Button>
                         </form>
@@ -88,6 +94,16 @@ export default function Login() {
                             <Button type="submit" className="w-full" disabled={loading}>
                                 {loading ? 'Verifying...' : 'Verify OTP'}
                             </Button>
+                            <p className="mt-4 text-center text-sm text-gray-600">
+                                Don’t have an account?{" "}
+                                <span
+                                    className="text-green-700 cursor-pointer hover:underline"
+                                    onClick={() => router.push("/signup")}
+                                >
+                                    Sign up here
+                                </span>
+                            </p>
+
                         </form>
                     )}
                 </CardContent>

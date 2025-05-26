@@ -33,6 +33,27 @@ const doctorScheme = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Appointment',
     }],
+    availabilty: [
+        {
+            day: {
+                type: String,
+                enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+                reuired: true
+            },
+            isAvailable: {
+                type: Boolean,
+                default: false,
+            },
+            openTime: {
+                type: String,
+                default: null,
+            },
+            closeTime: {
+                type: String,
+                default: null,
+            }
+        }
+    ],
     createdAt: {
         type: Date,
         default: Date.now,

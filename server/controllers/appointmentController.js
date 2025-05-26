@@ -5,6 +5,23 @@ const Doctor = require('../models/Doctor')
 const { sendEmail } = require('../utils/email')
 const { sendSMS } = require('../utils/sms')
 
+// Helper to generate time slots
+const generateTimeSlots = (openTime, closeTime, slotDuration = 30) => {
+    const slots = []
+    let current = new Date(`1970-01-01T${openTime}:00`)
+    const end = new Date(`1970-01-01T${closeTime}:00`)
+
+    while (current < end) {
+        const time = current.toTimeString().slice(0, 5)
+        slots.push({
+            time,
+            display: current.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+        })
+        current = new Date(current.getTime() + slotDuration * 60 * 1000)
+    }
+    return slots
+}
+
 // Create a new appointment
 const createAppointment = asyncHandler(async (req, res) => {
     const { userId, doctorId, date, notes } = req.body
@@ -32,6 +49,20 @@ const createAppointment = asyncHandler(async (req, res) => {
     if (isNaN(appointmentDate)) {
         res.status(400)
         throw new Error('Invalid date format')
+    }
+
+    // Check if the slot is within doctor's availability
+    const dayOfWeek = appointmentDate.toLocaleString('en-US', { weekday: 'long' })
+    const availability = doctor.availabilty.find((slot) => slot.day === dayOfWeek)
+    if (!availability || !availability.isAvailable) {
+        res.status(400)
+        throw new Error(`Doctor is not available on ${dayOfWeek}`)
+    }
+
+    const appointmentTime = appointmentDate.toTimeString().slice(0, 5) // e.g., "09:00"
+    if (appointmentTime < availability.openTime || appointmentTime >= availability.closeTime) {
+        res.status(400)
+        throw new Error(`Doctor is not available at ${appointmentTime}`)
     }
 
     // Check for overlapping appointments (30-minute slot)
@@ -169,6 +200,20 @@ const rescheduleAppointment = asyncHandler(async (req, res) => {
         throw new Error('Invalid date format')
     }
 
+    // Check if the slot is within doctor's availability
+    const dayOfWeek = newDate.toLocaleString('en-US', { weekday: 'long' })
+    const availability = appointment.doctor.availability.find((slot) => slot.day === dayOfWeek)
+    if (!availability || !availability.isAvailable) {
+        res.status(400)
+        throw new Error(`Doctor is not available on ${dayOfWeek}`)
+    }
+
+    const appointmentTime = newDate.toTimeString().slice(0, 5) // e.g., "09:00"
+    if (appointmentTime < availability.openTime || appointmentTime >= availability.closeTime) {
+        res.status(400)
+        throw new Error(`Doctor is not available at ${appointmentTime}`)
+    }
+
     // Check for overlapping appointments
     const slotDuration = 30 * 60 * 1000 // 30 minutes
     const startTime = new Date(newDate)
@@ -244,4 +289,51 @@ const getUserAppointments = asyncHandler(async (req, res) => {
     res.json({ appointments, total })
 })
 
-module.exports = { createAppointment, cancelAppointment, rescheduleAppointment, getDoctorAppointments, getUserAppointments }
+// Get available slots for a doctor on a specific date
+const getAvailableSlots = asyncHandler(async (req, res) => {
+    const { doctorId, date } = req.query
+
+    if (!doctorId || !date) {
+        res.status(400)
+        throw new Error('Doctor ID and date are required')
+    }
+
+    const selectedDate = new Date(date)
+    if (isNaN(selectedDate)) {
+        res.status(400)
+        throw new Error('Invalid date format')
+    }
+
+    const doctor = await Doctor.findById(doctorId)
+    if (!doctor) {
+        res.status(404)
+        throw new Error('Doctor not found')
+    }
+
+    const dayOfWeek = selectedDate.toLocaleString('en-US', { weekday: 'long' })
+    const availability = doctor.availability.find((slot) => slot.day === dayOfWeek)
+    if (!availability || !availability.isAvailable) {
+        return res.json([])
+    }
+
+    // Generate all possible slots
+    let slots = generateTimeSlots(availability.openTime, availability.closeTime)
+
+    // Filter out booked slots
+    const slotDuration = 30 * 60 * 1000 // 30 minutes
+    const startOfDay = new Date(selectedDate.setHours(0, 0, 0, 0))
+    const endOfDay = new Date(selectedDate.setHours(23, 59, 59, 999))
+
+    const bookedAppointments = await Appointment.find({
+        doctor: doctorId,
+        status: 'scheduled',
+        date: { $gte: startOfDay, $lte: endOfDay },
+    })
+
+    const bookedTimes = bookedAppointments.map((app) => new Date(app.date).toTimeString().slice(0, 5))
+    slots = slots.filter((slot) => !bookedTimes.includes(slot.time))
+
+    res.json(slots)
+})
+
+module.exports = { createAppointment, cancelAppointment, rescheduleAppointment, getDoctorAppointments, getUserAppointments, getAvailableSlots }

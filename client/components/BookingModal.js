@@ -120,10 +120,11 @@ export default function BookingModal({ isOpen, onClose, doctor, user }) {
                         <Label htmlFor="timeSlot">Time Slot</Label>
                         <Select
                             onValueChange={(value) => setForm({ ...form, timeSlot: value })}
+                            disabled={!form.date || availableSlots.length === 0}
                             value={form.timeSlot}
                         >
                             <SelectTrigger id="timeSlot">
-                                <SelectValue placeholder="Select time slot" />
+                                <SelectValue placeholder={availableSlots.length === 0 ? 'No slots available' : 'Select time slot'} />
                             </SelectTrigger>
                             <SelectContent>
                                 {availableSlots.map((slot) => (
@@ -133,6 +134,15 @@ export default function BookingModal({ isOpen, onClose, doctor, user }) {
                                 ))}
                             </SelectContent>
                         </Select>
+                    </div>
+                    <div>
+                        <Label htmlFor="notes">Notes</Label>
+                        <Input
+                            id="notes"
+                            value={form.notes}
+                            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                            placeholder="Any specific concerns"
+                        />
                     </div>
                     {error && <p className="text-red-500">{error}</p>}
                     <Button

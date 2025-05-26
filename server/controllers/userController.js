@@ -90,7 +90,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
     await OTP.deleteOne({ _id: otpRecord._id })
 
     // Generate JWT
-    const token = generateToken(user._id, 'user')
+    const token = generateToken(user._id, user.name, user.email, user.mobile)
 
     res.json({
         message: 'Login successful',
@@ -98,6 +98,17 @@ const verifyOTP = asyncHandler(async (req, res) => {
         user: { id: user._id, mobile, name: user.name, email: user.email },
     })
 })
+
+// Get user profile
+const getUserProfile = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.userId)
+    if (!user) {
+        res.status(404)
+        throw new Error("User not found")
+    }
+    res.json({ id: user._id, name: user.name, email: user.email, mobile: user.mobile })
+})
+
 // Update user profile
 const updateUserProfile = asyncHandler(async (req, res) => {
     const { userId } = req.params
@@ -135,4 +146,4 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     })
 })
 
-module.exports = { registerUser, sendOTP, verifyOTP, updateUserProfile }
+module.exports = { registerUser, sendOTP, verifyOTP, getUserProfile, updateUserProfile }

@@ -46,16 +46,18 @@ export default function Home() {
 
   return (
     <div>
-      <Header />
-      <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-gradient-to-b from-background to-green-300">
+      <main className="flex min-h-screen flex-col items-center justify-between p-24">
 
-        <section className="py-16 text-center md:text-left md:flex md:items-center md:justify-between gap-10">
+        <section className="py-1 text-center md:text-left md:flex md:items-center md:justify-between gap-10">
           <div>
-            <h1 className="text-4xl font-bold text-green-600">Welcome to Medicall</h1>
-            <p className="mt-4 text-lg text-gray-600">
+            <h1 className="text-5xl font-bold text-green-700">Welcome to Rakshaya</h1>
+            <p className="mt-4 text-2xl text-gray-600">
               Jab zarurat ho, hum saath hain.
             </p>
-            <Button className="mt-6 bg-green-500">Find a Doctor</Button>
+            <div className="space-x-2">
+              <Button className="mt-6 bg-green-700">Find Doctors</Button>
+              <Button className="mt-6 bg-green-700">Video Consult</Button>
+            </div>
           </div>
           <Image
             src="/doctor.png"
@@ -68,7 +70,7 @@ export default function Home() {
 
         <section className="container mx-auto py-8">
           <h2 className="text-3xl font-semibold text-primary mb-6">
-            Our Doctors
+            Find and book your doctor
           </h2>
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

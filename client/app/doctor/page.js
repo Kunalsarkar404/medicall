@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { cancelAppointment, getDoctorAppointments } from "@/lib/api"
 import { jwtDecode } from "jwt-decode"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
@@ -23,7 +24,7 @@ export default function DoctorDashboard() {
         try {
             const decoded = jwtDecode(token)
             if (decoded.iss !== 'doctor') {
-                router.push('/doctor')
+                router.push('/')
                 return
             }
 
@@ -54,9 +55,14 @@ export default function DoctorDashboard() {
         }
     }
     return (
-        <div className="min-h-screen bg-gradient-to-b from-background to-green-100">
+        <div className="min-h-screen">
             <div className="container mx-auto py-8">
-                <h1 className="text-3xl font-semibold text-primary mb-6">Doctor Dashboard</h1>
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-3xl font-semibold text-primary">Doctor Dashboard</h1>
+                    <Link href="/doctor/availability">
+                        <Button>Set Availability</Button>
+                    </Link>
+                </div>
                 {error && <p className="text-red-500 mb-4">{error}</p>}
                 {loading ? (
                     <p>Loading...</p>

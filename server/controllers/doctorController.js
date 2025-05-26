@@ -23,7 +23,18 @@ const registerDoctor = asyncHandler(async (req, res) => {
         throw new Error('Username already taken')
     }
 
-    const doctor = new Doctor({ username, password, name, specialty, profilePicture })
+    const doctor = new Doctor({
+        username, password, name, specialty, profilePicture,
+        availabilty: [
+            { day: 'Monday', isAvailable: false },
+            { day: 'Tuesday', isAvailable: false },
+            { day: 'Wednesday', isAvailable: false },
+            { day: 'Thursday', isAvailable: false },
+            { day: 'Friday', isAvailable: false },
+            { day: 'Saturday', isAvailable: false },
+            { day: 'Sunday', isAvailable: false },
+        ]
+    })
     await doctor.save()
 
     res.status(201).json({ message: 'Doctor registered successfully', doctor: { id: doctor._id, username, name, specialty } })
@@ -44,13 +55,54 @@ const loginDoctor = asyncHandler(async (req, res) => {
         throw new Error('Invalid credentials')
     }
 
-    const token = generateToken(doctor._id, 'doctor')
+    const token = generateToken(doctor._id, doctor.name, doctor.username, doctor.specialty)
 
     res.json({
         message: 'Login successful',
         token,
-        doctor: { id: doctor._id, username, name: doctor.name, specialty: doctor.specialty },
+        doctor: { id: doctor._id, username: doctor.username, name: doctor.name, specialty: doctor.specialty },
     })
+})
+
+// Set doctor availability
+const setAvailability = asyncHandler(async (req, res) => {
+    const { doctorId } = req.params
+    const { availability } = req.body
+
+    if (!Array.isArray(availability)) {
+        res.status(400)
+        throw new Error('Availability must be an array')
+    }
+
+    const doctor = await Doctor.findById(doctorId)
+    if (!doctor) {
+        res.status(404)
+        throw new Error('Doctor not found')
+    }
+
+    // Verify only the doctor can update their availability
+    if (doctor._id.toString() !== req.doctor._id.toString()) {
+        res.status(403)
+        throw new Error('Not authorized to update this doctor’s availability')
+    }
+
+    // Validate availability
+    const validDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    for (const slot of availability) {
+        if (!validDays.includes(slot.day)) {
+            res.status(400)
+            throw new Error(`Invalid day: ${slot.day}`)
+        }
+        if (slot.isAvailable && (!slot.openTime || !slot.closeTime)) {
+            res.status(400)
+            throw new Error(`Open and close times required for available day: ${slot.day}`)
+        }
+    }
+
+    doctor.availability = availability
+    await doctor.save()
+
+    res.json({ message: 'Availability updated successfully', availability: doctor.availability })
 })
 
 // Get all doctors
@@ -59,57 +111,17 @@ const getAllDoctors = asyncHandler(async (req, res) => {
     res.json(doctors)
 })
 
-const getAvailableSlots = asyncHandler(async (req, res) => {
-    const { doctorId, date } = req.body
+// Get doctor availability
+const getAvailability = asyncHandler(async (req, res) => {
+    const { doctorId } = req.params
 
-    if (!doctorId || !date) {
-        res.status(400)
-        throw new Error('Doctor ID and date are required')
+    const doctor = await Doctor.findById(doctorId).select('availability')
+    if (!doctor) {
+        res.status(404)
+        throw new Error('Doctor not found')
     }
 
-    const selectedDate = new Date(date)
-    if (isNaN(selectedDate)) {
-        res.status(400)
-        throw new Error('Invalid date format')
-    }
-
-    // Define working hours (e.g., 9 AM to 5 PM)
-    const startHour = 9
-    const endHour = 17
-    const slotDuration = 30 * 60 * 1000 // 30 minutes
-
-    const slots = []
-    let currentTime = new Date(selectedDate.setHours(startHour, 0, 0, 0))
-    const endTime = new Date(selectedDate.setHours(endHour, 0, 0, 0))
-
-    while (currentTime < endTime) {
-        slots.push(new Date(currentTime))
-        currentTime = new Date(currentTime.getTime() + slotDuration)
-    }
-
-    // Find booked slots
-    const bookedAppointments = await Appointment.find({
-        doctor: doctorId,
-        status: 'scheduled',
-        date: {
-            $gte: new Date(selectedDate.setHours(0, 0, 0, 0)),
-            $lt: new Date(selectedDate.setHours(23, 59, 59, 999)),
-        },
-    }).select('date')
-
-    const bookedTimes = bookedAppointments.map((app) => new Date(app.date).getTime())
-
-    // Filter available slots
-    const availableSlots = slots.filter(
-        (slot) => !bookedTimes.some(
-            (booked) => Math.abs(slot.getTime() - booked) < slotDuration / 2
-        )
-    )
-
-    res.json(availableSlots.map((slot) => ({
-        time: slot.toISOString(),
-        display: slot.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    })))
+    res.json(doctor.availability)
 })
 
-module.exports = { registerDoctor, loginDoctor, getAllDoctors, getAvailableSlots }
+module.exports = { registerDoctor, loginDoctor, getAllDoctors, setAvailability, getAvailability }

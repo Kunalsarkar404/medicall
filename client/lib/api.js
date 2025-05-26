@@ -28,5 +28,7 @@ export const cancelAppointment = (appointmentId) => api.put(`/appointments/${app
 export const getUserAppointments = (userId, params) => api.get(`/appointments/user/${userId}`, { params })
 export const updateUserProfile = (userId, data) => api.put(`/users/${userId}`, data)
 export const rescheduleAppointment = (appointmentId, data) => api.put(`/appointments/${appointmentId}/reschedule`, data)
+export const setDoctorAvailability = (doctorId, data) => api.put(`/doctors/${doctorId}/availabity`, data)
+export const getDoctorAvailability = (doctorId) => api.get(`/doctors/${doctorId}/availability`)
 
 export default api
